@@ -79,7 +79,7 @@ start_game:
 	la	$a2, struct_pilha		# a2 = pilha_cores
 	sw	$a2, 8($sp)
 	
-	li	$a3, 0				#i
+	li	$a3, 0				# i
 	sw	$a3, 12($sp)
 	
 	li	$s0, 0				# j = topo
@@ -96,9 +96,93 @@ for_sorteia:
 	
 	#adiciona na pilha
 	addi	$s0, $s0, 1			# topo++
-	sw	$s0, 20($sp)			#armazena o valor do topo	
-		
-	sw	$a0, 0($a2)			#armazena a cor sorteada na pilha
+	sw	$s0, 20($sp)			# armazena o valor do topo		
+	sw	$a0, 0($a2)			# armazena a cor sorteada na pilha
+	
+for_ler_pilha:
+	li	$a3, 0				# i = 0
+	sw	$a3, 12($sp)
+	lw	$a2, 8($sp)			# endereço da pilha
+	move	$s3, $a2			# endereço da pilha (auxiliar)--> para não modificar o original
+	sw	$s3, 32($sp)		
+loop_ler_pilha:
+	lw	$s0, 20($sp)			# topo (tamanho da pilha)
+	bge	$a3, $s0, for_get_result	# i >= tamanho da pilha
+	lw	$t0, 0($s3)			# primeiro elemento da pilha
+	lw	$a1, 4($sp)
+	move	$a0, $a1
+	
+	# acende_cor
+	bne	$t0, 0, case1
+	jal 	set_yellow
+case1:
+	bne	$t0, 1, case2		
+	jal	set_red
+case2:
+	bne	$t0, 2, case3		
+	jal	set_green
+case3:
+	bne	$t0, 3, end_for_ler_pilha		
+	jal	set_blue
+
+end_for_ler_pilha:
+	lw	$a3, 12($sp)
+	addi	$a3, $a3, 1			# i++
+	sw	$a3, 12($sp)
+	lw	$s3, 32($sp)
+	addi	$s3, $s3, 4			#endereço da pilha + 4
+	sw	$s3, 32($sp)
+	b	loop_ler_pilha	
+	
+for_get_result:
+	lw	$a2, 8($sp)			# endereço da pilha 	
+	move	$s3, $a2			# endereço da pilha (auxiliar)--> para não modificar o original
+	sw	$s3, 32($sp)
+	li	$a3, 0				#i
+	sw	$a3, 12($sp)
+loop_get_result:
+	lw	$s0, 20($sp)			# topo (tamanho da pilha)
+	bge	$a3, $s0, end_for_sorteia	# i >= tamanho da pilha
+	
+	#get result
+	li	$v0, 5
+	syscall					#letra digitada pelo usuario -->v0
+	
+	#move	$t3, $v0			
+	
+	# acende_cor
+	bne	$v0, 8, case_1
+	li	$s2, 0
+	sw	$s2, 28($sp)
+	jal 	set_yellow
+case_1:
+	bne	$v0, 2, case_2
+	li	$s2, 1
+	sw	$s2, 28($sp)		
+	jal	set_red
+case_2:
+	bne	$v0, 4, case_3	
+	li	$s2, 2
+	sw	$s2, 28($sp)	
+	jal	set_green
+case_3:
+	bne	$v0, 6, end_get_result	
+	li	$s2, 3
+	sw	$s2, 28($sp)	
+	jal	set_blue
+	
+end_get_result:
+	lw	$s3, 32($sp)
+	lw	$t2, 0($s3)			#cor sorteada na pilha	
+	lw	$s2, 28($sp)
+	bne	$s2, $t2, game_over
+	lw	$a3, 12($sp)
+	addi	$a3, $a3, 1			#i++
+	sw	$a3, 12($sp)
+	addi	$s3, $s3, 4			#endereço da pilha + 4
+	sw	$s3, 32($sp)
+	b	loop_get_result	
+	
 end_for_sorteia:
 	lw	$s0, 20($sp)			
 	lw	$a2, 8($sp)
@@ -165,92 +249,104 @@ end_success:
 set_yellow:
 	addiu	$sp, $sp, -48
 	sw	$ra, 16($sp)
-	jal	yellow_on
+	sw	$a0, 0($sp)			#velocidade
+	
 	#som
 	li	$v0, 31
-	li	$a0, 71
 	li	$a1, 1000
+	li	$a0, 71
 	li	$a2, 40
 	li	$a3, 100
 	syscall
 	
-	#lw	$a1, 4($sp)
-	#move	$a0, $a1
-	li	$a0, 1000
+	jal	yellow_on
+	
+	#sleep -> velocidade escolhida pelo usuario
+	lw	$a0, 0($sp)
 	li	$v0, 32
 	syscall 
-	jal	yellow_off			# 8 (teclado)
-	li	$s2, 0
-	sw	$s2, 28($sp)
+	
+	jal	yellow_off			
+	#li	$s2, 0
+	#sw	$s2, 28($sp)
 	lw	$ra, 16($sp)
 	addiu	$sp, $sp, 48
 	jr	$ra
 set_red:
 	addiu	$sp, $sp, -48
+	sw	$a0, 0($sp)			#velocidade
 	sw	$ra, 16($sp)
-	jal	red_on				# 2 (teclado)
+	
 	#som
 	li	$v0, 31
-	li	$a0, 61
 	li	$a1, 1000
+	li	$a0, 61
 	li	$a2, 17
 	li	$a3, 100
 	syscall
 	
-	#lw	$a1, 4($sp)
-	#move	$a0, $a1
-	li	$a0, 1000
+	jal	red_on				
+	
+	#sleep -> velocidade escolhida pelo usuario
+	lw	$a0, 0($sp)
 	li	$v0, 32
 	syscall 
+	
 	jal	red_off
-	li	$s2, 1
-	sw	$s2, 28($sp)
+	#li	$s2, 1
+	#sw	$s2, 28($sp)
 	lw	$ra, 16($sp)
 	addiu	$sp, $sp, 48
 	jr	$ra
 set_blue:
 	addiu	$sp, $sp, -48
-	sw	$ra, 16($sp)	
-	jal	blue_on				# 6 (teclado)
+	sw	$a0, 0($sp)			#velocidade
+	sw	$ra, 16($sp)
+	
 	#som
 	li	$v0, 31
-	li	$a0, 72
 	li	$a1, 1000
+	li	$a0, 72
 	li	$a2, 14
 	li	$a3, 127
-	syscall
+	syscall	
 	
-	#lw	$a1, 4($sp)
-	#move	$a0, $a1
-	li	$a0, 1000
+	jal	blue_on				
+	
+	#sleep -> velocidade escolhida pelo usuario
+	lw	$a0, 0($sp)
 	li	$v0, 32
 	syscall 
+	
 	jal	blue_off
-	li	$s2, 3
-	sw	$s2, 28($sp)
+	#li	$s2, 3
+	#sw	$s2, 28($sp)
 	lw	$ra, 16($sp)
 	addiu	$sp, $sp, 48
 	jr	$ra
 set_green:
 	addiu	$sp, $sp, -48
+	sw	$a0, 0($sp)			#velocidade
 	sw	$ra, 16($sp)
-	jal	green_on			# 4 (teclado)
+	
 	#som
 	li	$v0, 31
-	li	$a0, 68
 	li	$a1, 1000
+	li	$a0, 68
 	li	$a2, 25
 	li	$a3, 100
 	syscall
 	
-	#lw	$a1, 4($sp)
-	#move	$a0, $a1
-	li	$a0, 1000
+	jal	green_on			
+	
+	#sleep -> velocidade escolhida pelo usuario
+	lw	$a0, 0($sp)
 	li	$v0, 32
 	syscall 
+	
 	jal	green_off
-	li	$s2, 2
-	sw	$s2, 28($sp)
+	#li	$s2, 2
+	#sw	$s2, 28($sp)
 	lw	$ra, 16($sp)
 	addiu	$sp, $sp, 48
 	jr	$ra
