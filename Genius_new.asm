@@ -106,6 +106,13 @@ for_ler_pilha:
 	syscall 
 	
 	li	$a3, 0				# i = 0
+<<<<<<< HEAD
+	lw	$s0, 20($sp)			# topo (tamanho da pilha)
+	lw	$a2, 8($sp)			# endereço da pilha
+loop_ler_pilha:
+	bge	$a3, $s0, for_get_result	# i >= tamanho da pilha
+	lw	$t0, 0($a2)			# primeiro elemento da pilha
+=======
 	sw	$a3, 12($sp)
 	lw	$a2, 8($sp)			# endereço da pilha
 	move	$s3, $a2			# endereço da pilha (auxiliar)--> para não modificar o original
@@ -114,10 +121,23 @@ loop_ler_pilha:
 	lw	$s0, 20($sp)			# topo (tamanho da pilha)
 	bge	$a3, $s0, for_get_result	# i >= tamanho da pilha
 	lw	$t0, 0($s3)			# primeiro elemento da pilha
+>>>>>>> cc9a89f512a5d0742161ef96d28c1d06dd53f19c
 	lw	$a1, 4($sp)
 	move	$a0, $a1
 	
 	# acende_cor
+<<<<<<< HEAD
+	bne	$s1, 0, case1
+	jal 	set_yellow
+case1:
+	bne	$s1, 1, case2		
+	jal	set_red
+case2:
+	bne	$s1, 2, case3		
+	jal	set_green
+case3:
+	bne	$s1, 3, end_for_ler_pilha		
+=======
 	bne	$t0, 0, case1
 	jal 	set_yellow
 case1:
@@ -128,12 +148,22 @@ case2:
 	jal	set_green
 case3:
 	bne	$t0, 3, end_for_ler_pilha		
+>>>>>>> cc9a89f512a5d0742161ef96d28c1d06dd53f19c
 	jal	set_blue
 
 end_for_ler_pilha:
 	lw	$a3, 12($sp)
 	addi	$a3, $a3, 1			# i++
 	sw	$a3, 12($sp)
+<<<<<<< HEAD
+	lw	$a2, 8($sp)
+	addi	$a2, $a2, 4
+	sw	$a2, 8($sp)
+	b	loop_ler_pilha	
+	
+	
+for_get_result:
+=======
 	lw	$s3, 32($sp)
 	addi	$s3, $s3, 4			# endereço da pilha + 4
 	sw	$s3, 32($sp)
@@ -186,6 +216,7 @@ end_get_result:
 	sw	$s3, 32($sp)
 	b	loop_get_result	
 	
+>>>>>>> cc9a89f512a5d0742161ef96d28c1d06dd53f19c
 end_for_sorteia:
 	lw	$s0, 20($sp)			
 	lw	$a2, 8($sp)
@@ -252,11 +283,33 @@ end_success:
 set_yellow:
 	addiu	$sp, $sp, -48
 	sw	$ra, 16($sp)
+<<<<<<< HEAD
+	sw	$a0, 0($sp)
+	jal	yellow_on
+=======
 	sw	$a0, 0($sp)			#velocidade
 	
+<<<<<<< HEAD
+=======
+>>>>>>> cc9a89f512a5d0742161ef96d28c1d06dd53f19c
+	#som
+	li	$v0, 31
+	li	$a1, 1000
+	li	$a0, 71
+	li	$a2, 40
+	li	$a3, 100
+	syscall
+	
+<<<<<<< HEAD
+	#lw	$a1, 4($sp)
+	#move	$a0, $a1
+	#li	$a0, 1000
+=======
+>>>>>>> 2a18a0a92d44a89cef50338f85d7a896270f93cb
 	jal	yellow_on
 	
 	#sleep -> velocidade escolhida pelo usuario
+>>>>>>> cc9a89f512a5d0742161ef96d28c1d06dd53f19c
 	lw	$a0, 0($sp)
 	li	$v0, 32
 	syscall 
@@ -268,12 +321,33 @@ set_yellow:
 	jr	$ra
 set_red:
 	addiu	$sp, $sp, -48
+<<<<<<< HEAD
+	sw	$a0, 0($sp)
+=======
 	sw	$a0, 0($sp)			#velocidade
+>>>>>>> cc9a89f512a5d0742161ef96d28c1d06dd53f19c
 	sw	$ra, 16($sp)
 	
+<<<<<<< HEAD
+=======
+	#som
+	li	$v0, 31
+	li	$a1, 1000
+	li	$a0, 61
+	li	$a2, 17
+	li	$a3, 100
+	syscall
+	
+<<<<<<< HEAD
+	#lw	$a1, 4($sp)
+	#move	$a0, $a1
+	#li	$a0, 1000
+=======
+>>>>>>> 2a18a0a92d44a89cef50338f85d7a896270f93cb
 	jal	red_on				
 	
 	#sleep -> velocidade escolhida pelo usuario
+>>>>>>> cc9a89f512a5d0742161ef96d28c1d06dd53f19c
 	lw	$a0, 0($sp)
 	li	$v0, 32
 	syscall 
@@ -285,13 +359,36 @@ set_red:
 	jr	$ra
 set_blue:
 	addiu	$sp, $sp, -48
+<<<<<<< HEAD
+	sw	$a0, 0($sp)
+	sw	$ra, 16($sp)	
+	jal	blue_on				# 6 (teclado)
+=======
 	sw	$a0, 0($sp)			#velocidade
 	sw	$ra, 16($sp)
+<<<<<<< HEAD
 
+=======
 	
+>>>>>>> cc9a89f512a5d0742161ef96d28c1d06dd53f19c
+	#som
+	li	$v0, 31
+	li	$a1, 1000
+	li	$a0, 72
+	li	$a2, 14
+	li	$a3, 127
+	syscall	
+>>>>>>> 2a18a0a92d44a89cef50338f85d7a896270f93cb
+	
+<<<<<<< HEAD
+	#lw	$a1, 4($sp)
+	#move	$a0, $a1
+	#li	$a0, 1000
+=======
 	jal	blue_on				
 	
 	#sleep -> velocidade escolhida pelo usuario
+>>>>>>> cc9a89f512a5d0742161ef96d28c1d06dd53f19c
 	lw	$a0, 0($sp)
 	li	$v0, 32
 	syscall 
@@ -303,13 +400,23 @@ set_blue:
 	jr	$ra
 set_green:
 	addiu	$sp, $sp, -48
+<<<<<<< HEAD
+	sw	$a0, 0($sp)
+=======
 	sw	$a0, 0($sp)			#velocidade
+>>>>>>> cc9a89f512a5d0742161ef96d28c1d06dd53f19c
 	sw	$ra, 16($sp)
 
 	
+<<<<<<< HEAD
+	#lw	$a1, 4($sp)
+	#move	$a0, $a1
+	#li	$a0, 1000
+=======
 	jal	green_on			
 	
 	#sleep -> velocidade escolhida pelo usuario
+>>>>>>> cc9a89f512a5d0742161ef96d28c1d06dd53f19c
 	lw	$a0, 0($sp)
 	li	$v0, 32
 	syscall 
