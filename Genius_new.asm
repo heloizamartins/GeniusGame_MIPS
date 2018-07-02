@@ -16,7 +16,7 @@ n_jogadas: 	.asciiz "Até quantas repetições você deseja jogar?\n"
 sucesso: 	.asciiz "	PARABÉNS!\n	Você ganhou!\n"
 fracasso:	.asciiz "	GAME OVER\n"
 menu: 		.asciiz "1- Iniciar o jogo\n2- Encerrar o programa\n"
-velocidade: 	.asciiz "Qual a velocidade desejada? (100ms, 200ms, 300ms)"
+velocidade: 	.asciiz "Qual a velocidade desejada (milisegundos)?"
 res: 		.asciiz "digita:\n"
 .align 2
 struct_pilha: 	.space 84	#20 * 4 bytes + 4 bytes
@@ -100,6 +100,11 @@ for_sorteia:
 	sw	$a0, 0($a2)			# armazena a cor sorteada na pilha
 	
 for_ler_pilha:
+	#sleep 
+	li	$a0, 500
+	li	$v0, 32
+	syscall 
+	
 	li	$a3, 0				# i = 0
 	sw	$a3, 12($sp)
 	lw	$a2, 8($sp)			# endereço da pilha
@@ -130,7 +135,7 @@ end_for_ler_pilha:
 	addi	$a3, $a3, 1			# i++
 	sw	$a3, 12($sp)
 	lw	$s3, 32($sp)
-	addi	$s3, $s3, 4			#endereço da pilha + 4
+	addi	$s3, $s3, 4			# endereço da pilha + 4
 	sw	$s3, 32($sp)
 	b	loop_ler_pilha	
 	
@@ -138,18 +143,16 @@ for_get_result:
 	lw	$a2, 8($sp)			# endereço da pilha 	
 	move	$s3, $a2			# endereço da pilha (auxiliar)--> para não modificar o original
 	sw	$s3, 32($sp)
-	li	$a3, 0				#i
+	li	$a3, 0				# i
 	sw	$a3, 12($sp)
 loop_get_result:
 	lw	$s0, 20($sp)			# topo (tamanho da pilha)
 	bge	$a3, $s0, end_for_sorteia	# i >= tamanho da pilha
 	
-	#get result
-	li	$v0, 5
-	syscall					#letra digitada pelo usuario -->v0
+	jal	get_result
 	
-	#move	$t3, $v0			
-	
+	lw	$a1, 4($sp)
+	move	$a0, $a1
 	# acende_cor
 	bne	$v0, 8, case_1
 	li	$s2, 0
@@ -251,14 +254,6 @@ set_yellow:
 	sw	$ra, 16($sp)
 	sw	$a0, 0($sp)			#velocidade
 	
-	#som
-	li	$v0, 31
-	li	$a1, 1000
-	li	$a0, 71
-	li	$a2, 40
-	li	$a3, 100
-	syscall
-	
 	jal	yellow_on
 	
 	#sleep -> velocidade escolhida pelo usuario
@@ -267,8 +262,7 @@ set_yellow:
 	syscall 
 	
 	jal	yellow_off			
-	#li	$s2, 0
-	#sw	$s2, 28($sp)
+	
 	lw	$ra, 16($sp)
 	addiu	$sp, $sp, 48
 	jr	$ra
@@ -276,14 +270,6 @@ set_red:
 	addiu	$sp, $sp, -48
 	sw	$a0, 0($sp)			#velocidade
 	sw	$ra, 16($sp)
-	
-	#som
-	li	$v0, 31
-	li	$a1, 1000
-	li	$a0, 61
-	li	$a2, 17
-	li	$a3, 100
-	syscall
 	
 	jal	red_on				
 	
@@ -293,8 +279,7 @@ set_red:
 	syscall 
 	
 	jal	red_off
-	#li	$s2, 1
-	#sw	$s2, 28($sp)
+
 	lw	$ra, 16($sp)
 	addiu	$sp, $sp, 48
 	jr	$ra
@@ -302,14 +287,7 @@ set_blue:
 	addiu	$sp, $sp, -48
 	sw	$a0, 0($sp)			#velocidade
 	sw	$ra, 16($sp)
-	
-	#som
-	li	$v0, 31
-	li	$a1, 1000
-	li	$a0, 72
-	li	$a2, 14
-	li	$a3, 127
-	syscall	
+
 	
 	jal	blue_on				
 	
@@ -319,8 +297,7 @@ set_blue:
 	syscall 
 	
 	jal	blue_off
-	#li	$s2, 3
-	#sw	$s2, 28($sp)
+	
 	lw	$ra, 16($sp)
 	addiu	$sp, $sp, 48
 	jr	$ra
@@ -328,14 +305,7 @@ set_green:
 	addiu	$sp, $sp, -48
 	sw	$a0, 0($sp)			#velocidade
 	sw	$ra, 16($sp)
-	
-	#som
-	li	$v0, 31
-	li	$a1, 1000
-	li	$a0, 68
-	li	$a2, 25
-	li	$a3, 100
-	syscall
+
 	
 	jal	green_on			
 	
@@ -345,8 +315,7 @@ set_green:
 	syscall 
 	
 	jal	green_off
-	#li	$s2, 2
-	#sw	$s2, 28($sp)
+	
 	lw	$ra, 16($sp)
 	addiu	$sp, $sp, 48
 	jr	$ra
@@ -481,6 +450,24 @@ yellow_on:
 	sw	$a0, 0($sp)
 	sw	$a2, 8($sp)
 	lw	$s0, yellow_neon
+	sw	$a0, 0($sp)
+	sw	$a1, 4($sp)
+	sw	$a2, 8($sp)
+	sw	$a3, 12($sp)
+
+	#som
+	li	$v0, 31
+	li	$a1, 300
+	li	$a0, 71
+	li	$a2, 40
+	li	$a3, 100
+	syscall
+	
+	lw	$a0, 0($sp)
+	lw	$a1, 4($sp)
+	lw	$a2, 8($sp)
+	lw	$a3, 12($sp)
+
 for_yellow_on:
 	bgt	$a1, 7, end_yellow_on
 	lw	$a0, 0($sp)
@@ -507,6 +494,23 @@ red_on:
 	sw	$a0, 0($sp)
 	sw	$a2, 8($sp)
 	lw	$s0, red_neon
+	sw	$a0, 0($sp)
+	sw	$a1, 4($sp)
+	sw	$a2, 8($sp)
+	sw	$a3, 12($sp)
+	
+	#som
+	li	$v0, 31
+	li	$a1, 300
+	li	$a0, 61
+	li	$a2, 17
+	li	$a3, 100
+	syscall
+	
+	lw	$a0, 0($sp)
+	lw	$a1, 4($sp)
+	lw	$a2, 8($sp)
+	lw	$a3, 12($sp)
 for_red_on:
 	bgt	$a1, 30, end_red_on
 	lw	$a0, 0($sp)
@@ -533,6 +537,23 @@ green_on:
 	sw	$a0, 0($sp)
 	sw	$a2, 8($sp)
 	lw	$s0, green_neon	
+	
+	sw	$a0, 0($sp)
+	sw	$a1, 4($sp)
+	sw	$a2, 8($sp)
+	sw	$a3, 12($sp)
+	#som
+	li	$v0, 31
+	li	$a1, 300
+	li	$a0, 68
+	li	$a2, 25
+	li	$a3, 100
+	syscall
+	lw	$a0, 0($sp)
+	lw	$a1, 4($sp)
+	lw	$a2, 8($sp)
+	lw	$a3, 12($sp)
+	
 for_green_on:
 	bgt	$a1, 22, end_green_on
 	lw	$a0, 0($sp)
@@ -559,6 +580,25 @@ blue_on:
 	sw	$a0, 0($sp)
 	sw	$a2, 8($sp)
 	lw	$s0, blue_neon	
+	
+	sw	$a0, 0($sp)
+	sw	$a1, 4($sp)
+	sw	$a2, 8($sp)
+	sw	$a3, 12($sp)
+	
+	
+	#som
+	li	$v0, 31
+	li	$a1, 300
+	li	$a0, 72
+	li	$a2, 14
+	li	$a3, 127
+	syscall	
+	
+	lw	$a0, 0($sp)
+	lw	$a1, 4($sp)
+	lw	$a2, 8($sp)
+	lw	$a3, 12($sp)
 for_blue_on:
 	bgt	$a1, 22, end_blue_on
 	lw	$a0, 0($sp)
@@ -684,9 +724,17 @@ end_draw:
 	lw	$ra, 16($sp)
 	addiu	$sp, $sp, 48
 	jr	$ra
+	
+get_result:	
+	lw	$t0, 0xffff0000
+	andi	$t0, $t0, 0x00000001			# Isolate ready bit
+	beqz	$t0, get_result				# se o ready é 0 ele espera para pegar um caracter
+	lbu	$v0, 0xffff0004   			# get data		
+	subi	$v0, $v0, 0x30
+	jr	$ra
 end:
 	lw	$ra, 16($sp)
-	addiu	$sp, $sp, 48	
+	addiu	$sp, $sp, 48
 exit_program:
 	li	$v0, 10
 	syscall
