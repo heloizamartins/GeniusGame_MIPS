@@ -79,7 +79,7 @@ start_game:
 	la	$a2, struct_pilha		# a2 = pilha_cores
 	sw	$a2, 8($sp)
 	
-	li	$a3, 0				#i
+	li	$a3, 0				# i
 	sw	$a3, 12($sp)
 	
 	li	$s0, 0				# j = topo
@@ -96,9 +96,43 @@ for_sorteia:
 	
 	#adiciona na pilha
 	addi	$s0, $s0, 1			# topo++
-	sw	$s0, 20($sp)			#armazena o valor do topo	
-		
-	sw	$a0, 0($a2)			#armazena a cor sorteada na pilha
+	sw	$s0, 20($sp)			# armazena o valor do topo		
+	sw	$a0, 0($a2)			# armazena a cor sorteada na pilha
+	
+for_ler_pilha:
+	li	$a3, 0				# i = 0
+	lw	$s0, 20($sp)			# topo (tamanho da pilha)
+	lw	$a2, 8($sp)			# endereço da pilha
+loop_ler_pilha:
+	bge	$a3, $s0, for_get_result	# i >= tamanho da pilha
+	lw	$t0, 0($a2)			# primeiro elemento da pilha
+	lw	$a1, 4($sp)
+	move	$a0, $a1
+	
+	# acende_cor
+	bne	$s1, 0, case1
+	jal 	set_yellow
+case1:
+	bne	$s1, 1, case2		
+	jal	set_red
+case2:
+	bne	$s1, 2, case3		
+	jal	set_green
+case3:
+	bne	$s1, 3, end_for_ler_pilha		
+	jal	set_blue
+
+end_for_ler_pilha:
+	lw	$a3, 12($sp)
+	addi	$a3, $a3, 1			# i++
+	sw	$a3, 12($sp)
+	lw	$a2, 8($sp)
+	addi	$a2, $a2, 4
+	sw	$a2, 8($sp)
+	b	loop_ler_pilha	
+	
+	
+for_get_result:
 end_for_sorteia:
 	lw	$s0, 20($sp)			
 	lw	$a2, 8($sp)
@@ -165,6 +199,7 @@ end_success:
 set_yellow:
 	addiu	$sp, $sp, -48
 	sw	$ra, 16($sp)
+	sw	$a0, 0($sp)
 	jal	yellow_on
 	#som
 	li	$v0, 31
@@ -176,7 +211,8 @@ set_yellow:
 	
 	#lw	$a1, 4($sp)
 	#move	$a0, $a1
-	li	$a0, 1000
+	#li	$a0, 1000
+	lw	$a0, 0($sp)
 	li	$v0, 32
 	syscall 
 	jal	yellow_off			# 8 (teclado)
@@ -187,6 +223,7 @@ set_yellow:
 	jr	$ra
 set_red:
 	addiu	$sp, $sp, -48
+	sw	$a0, 0($sp)
 	sw	$ra, 16($sp)
 	jal	red_on				# 2 (teclado)
 	#som
@@ -199,7 +236,8 @@ set_red:
 	
 	#lw	$a1, 4($sp)
 	#move	$a0, $a1
-	li	$a0, 1000
+	#li	$a0, 1000
+	lw	$a0, 0($sp)
 	li	$v0, 32
 	syscall 
 	jal	red_off
@@ -210,6 +248,7 @@ set_red:
 	jr	$ra
 set_blue:
 	addiu	$sp, $sp, -48
+	sw	$a0, 0($sp)
 	sw	$ra, 16($sp)	
 	jal	blue_on				# 6 (teclado)
 	#som
@@ -222,7 +261,8 @@ set_blue:
 	
 	#lw	$a1, 4($sp)
 	#move	$a0, $a1
-	li	$a0, 1000
+	#li	$a0, 1000
+	lw	$a0, 0($sp)
 	li	$v0, 32
 	syscall 
 	jal	blue_off
@@ -233,6 +273,7 @@ set_blue:
 	jr	$ra
 set_green:
 	addiu	$sp, $sp, -48
+	sw	$a0, 0($sp)
 	sw	$ra, 16($sp)
 	jal	green_on			# 4 (teclado)
 	#som
@@ -245,7 +286,8 @@ set_green:
 	
 	#lw	$a1, 4($sp)
 	#move	$a0, $a1
-	li	$a0, 1000
+	#li	$a0, 1000
+	lw	$a0, 0($sp)
 	li	$v0, 32
 	syscall 
 	jal	green_off
