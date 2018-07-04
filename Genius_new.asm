@@ -18,6 +18,8 @@ fracasso:	.asciiz "	GAME OVER\n"
 menu: 		.asciiz "1- Iniciar o jogo\n2- Encerrar o programa\n"
 velocidade: 	.asciiz "Qual a velocidade desejada (milisegundos)?"
 res: 		.asciiz "digita:\n"
+flag: 		.word	 0
+#---------------------------------
 .align 2
 struct_pilha: 	.space 84	#20 * 4 bytes + 4 bytes
 
@@ -42,6 +44,20 @@ struct_pilha: 	.space 84	#20 * 4 bytes + 4 bytes
 .text
 .globl main
 main:
+	#--------------------------------------------------------------
+	mfc0    $t0, $12				#get status
+
+	li	$t1, 0x11110011			#interrupt mask
+	and     $t0, $t0, $t1
+	
+	li      $t1, 0x00000100 			#interrupt mask (8)
+	or      $t0, $t0, $t1
+	
+	li      $t1, 0x00000001			#Interrupt enable
+	or      $t0, $t0, $t1
+	
+	mtc0    $t0, $12				#save status
+	#--------------------------------------------------------------
 	la	$a0, menu
 	li	$v0, 4
 	syscall
@@ -84,8 +100,7 @@ start_game:
 	
 	li	$s0, 0				# j = topo
 	sw	$s0, 20($sp)
-for_sorteia:
-	#lw	$s0, 20($a2)			# carregar o topo da pilha (topo = pilha->topo)			
+for_sorteia:	
 	lw	$a0, 0($sp)			# n_jogadas
 	bge	$s0, $a0, end_success		# if (topo >= n° jogadas) ==>success
 	
@@ -98,7 +113,6 @@ for_sorteia:
 	addi	$s0, $s0, 1			# topo++
 	sw	$s0, 20($sp)			# armazena o valor do topo		
 	sw	$a0, 0($a2)			# armazena a cor sorteada na pilha
-	
 for_ler_pilha:
 	#sleep 
 	li	$a0, 500
@@ -106,38 +120,18 @@ for_ler_pilha:
 	syscall 
 	
 	li	$a3, 0				# i = 0
-<<<<<<< HEAD
-	lw	$s0, 20($sp)			# topo (tamanho da pilha)
-	lw	$a2, 8($sp)			# endereço da pilha
-loop_ler_pilha:
-	bge	$a3, $s0, for_get_result	# i >= tamanho da pilha
-	lw	$t0, 0($a2)			# primeiro elemento da pilha
-=======
 	sw	$a3, 12($sp)
 	lw	$a2, 8($sp)			# endereço da pilha
-	move	$s3, $a2			# endereço da pilha (auxiliar)--> para não modificar o original
+	move	$s3, $a2				# endereço da pilha (auxiliar)--> para não modificar o original
 	sw	$s3, 32($sp)		
 loop_ler_pilha:
 	lw	$s0, 20($sp)			# topo (tamanho da pilha)
-	bge	$a3, $s0, for_get_result	# i >= tamanho da pilha
+	bge	$a3, $s0, for_get_result		# i >= tamanho da pilha
 	lw	$t0, 0($s3)			# primeiro elemento da pilha
->>>>>>> cc9a89f512a5d0742161ef96d28c1d06dd53f19c
 	lw	$a1, 4($sp)
 	move	$a0, $a1
 	
 	# acende_cor
-<<<<<<< HEAD
-	bne	$s1, 0, case1
-	jal 	set_yellow
-case1:
-	bne	$s1, 1, case2		
-	jal	set_red
-case2:
-	bne	$s1, 2, case3		
-	jal	set_green
-case3:
-	bne	$s1, 3, end_for_ler_pilha		
-=======
 	bne	$t0, 0, case1
 	jal 	set_yellow
 case1:
@@ -148,22 +142,12 @@ case2:
 	jal	set_green
 case3:
 	bne	$t0, 3, end_for_ler_pilha		
->>>>>>> cc9a89f512a5d0742161ef96d28c1d06dd53f19c
 	jal	set_blue
 
 end_for_ler_pilha:
 	lw	$a3, 12($sp)
 	addi	$a3, $a3, 1			# i++
 	sw	$a3, 12($sp)
-<<<<<<< HEAD
-	lw	$a2, 8($sp)
-	addi	$a2, $a2, 4
-	sw	$a2, 8($sp)
-	b	loop_ler_pilha	
-	
-	
-for_get_result:
-=======
 	lw	$s3, 32($sp)
 	addi	$s3, $s3, 4			# endereço da pilha + 4
 	sw	$s3, 32($sp)
@@ -171,7 +155,7 @@ for_get_result:
 	
 for_get_result:
 	lw	$a2, 8($sp)			# endereço da pilha 	
-	move	$s3, $a2			# endereço da pilha (auxiliar)--> para não modificar o original
+	move	$s3, $a2				# endereço da pilha (auxiliar)--> para não modificar o original
 	sw	$s3, 32($sp)
 	li	$a3, 0				# i
 	sw	$a3, 12($sp)
@@ -180,7 +164,7 @@ loop_get_result:
 	bge	$a3, $s0, end_for_sorteia	# i >= tamanho da pilha
 	
 	jal	get_result
-	
+
 	lw	$a1, 4($sp)
 	move	$a0, $a1
 	# acende_cor
@@ -206,22 +190,21 @@ case_3:
 	
 end_get_result:
 	lw	$s3, 32($sp)
-	lw	$t2, 0($s3)			#cor sorteada na pilha	
+	lw	$t2, 0($s3)			# cor sorteada na pilha	
 	lw	$s2, 28($sp)
 	bne	$s2, $t2, game_over
 	lw	$a3, 12($sp)
-	addi	$a3, $a3, 1			#i++
+	addi	$a3, $a3, 1			# i++
 	sw	$a3, 12($sp)
-	addi	$s3, $s3, 4			#endereço da pilha + 4
+	addi	$s3, $s3, 4			# endereço da pilha + 4
 	sw	$s3, 32($sp)
 	b	loop_get_result	
 	
->>>>>>> cc9a89f512a5d0742161ef96d28c1d06dd53f19c
 end_for_sorteia:
 	lw	$s0, 20($sp)			
 	lw	$a2, 8($sp)
 	sll	$t0, $s0, 2
-	add	$a2, $a2, $t0			#endereco na pilha = endereco inicial + topo
+	add	$a2, $a2, $t0			# endereco na pilha = endereco inicial + topo
 	b	for_sorteia
 #--------------------------------------------------
 end_success:	
@@ -283,33 +266,11 @@ end_success:
 set_yellow:
 	addiu	$sp, $sp, -48
 	sw	$ra, 16($sp)
-<<<<<<< HEAD
-	sw	$a0, 0($sp)
-	jal	yellow_on
-=======
-	sw	$a0, 0($sp)			#velocidade
+	sw	$a0, 0($sp)			# velocidade
 	
-<<<<<<< HEAD
-=======
->>>>>>> cc9a89f512a5d0742161ef96d28c1d06dd53f19c
-	#som
-	li	$v0, 31
-	li	$a1, 1000
-	li	$a0, 71
-	li	$a2, 40
-	li	$a3, 100
-	syscall
-	
-<<<<<<< HEAD
-	#lw	$a1, 4($sp)
-	#move	$a0, $a1
-	#li	$a0, 1000
-=======
->>>>>>> 2a18a0a92d44a89cef50338f85d7a896270f93cb
 	jal	yellow_on
 	
 	#sleep -> velocidade escolhida pelo usuario
->>>>>>> cc9a89f512a5d0742161ef96d28c1d06dd53f19c
 	lw	$a0, 0($sp)
 	li	$v0, 32
 	syscall 
@@ -321,33 +282,12 @@ set_yellow:
 	jr	$ra
 set_red:
 	addiu	$sp, $sp, -48
-<<<<<<< HEAD
-	sw	$a0, 0($sp)
-=======
-	sw	$a0, 0($sp)			#velocidade
->>>>>>> cc9a89f512a5d0742161ef96d28c1d06dd53f19c
+	sw	$a0, 0($sp)			# velocidade
 	sw	$ra, 16($sp)
 	
-<<<<<<< HEAD
-=======
-	#som
-	li	$v0, 31
-	li	$a1, 1000
-	li	$a0, 61
-	li	$a2, 17
-	li	$a3, 100
-	syscall
-	
-<<<<<<< HEAD
-	#lw	$a1, 4($sp)
-	#move	$a0, $a1
-	#li	$a0, 1000
-=======
->>>>>>> 2a18a0a92d44a89cef50338f85d7a896270f93cb
 	jal	red_on				
 	
 	#sleep -> velocidade escolhida pelo usuario
->>>>>>> cc9a89f512a5d0742161ef96d28c1d06dd53f19c
 	lw	$a0, 0($sp)
 	li	$v0, 32
 	syscall 
@@ -359,36 +299,13 @@ set_red:
 	jr	$ra
 set_blue:
 	addiu	$sp, $sp, -48
-<<<<<<< HEAD
-	sw	$a0, 0($sp)
-	sw	$ra, 16($sp)	
-	jal	blue_on				# 6 (teclado)
-=======
-	sw	$a0, 0($sp)			#velocidade
+	sw	$a0, 0($sp)			# velocidade
 	sw	$ra, 16($sp)
-<<<<<<< HEAD
 
-=======
 	
->>>>>>> cc9a89f512a5d0742161ef96d28c1d06dd53f19c
-	#som
-	li	$v0, 31
-	li	$a1, 1000
-	li	$a0, 72
-	li	$a2, 14
-	li	$a3, 127
-	syscall	
->>>>>>> 2a18a0a92d44a89cef50338f85d7a896270f93cb
-	
-<<<<<<< HEAD
-	#lw	$a1, 4($sp)
-	#move	$a0, $a1
-	#li	$a0, 1000
-=======
 	jal	blue_on				
 	
 	#sleep -> velocidade escolhida pelo usuario
->>>>>>> cc9a89f512a5d0742161ef96d28c1d06dd53f19c
 	lw	$a0, 0($sp)
 	li	$v0, 32
 	syscall 
@@ -400,23 +317,13 @@ set_blue:
 	jr	$ra
 set_green:
 	addiu	$sp, $sp, -48
-<<<<<<< HEAD
-	sw	$a0, 0($sp)
-=======
-	sw	$a0, 0($sp)			#velocidade
->>>>>>> cc9a89f512a5d0742161ef96d28c1d06dd53f19c
+	sw	$a0, 0($sp)			# velocidade
 	sw	$ra, 16($sp)
 
 	
-<<<<<<< HEAD
-	#lw	$a1, 4($sp)
-	#move	$a0, $a1
-	#li	$a0, 1000
-=======
 	jal	green_on			
 	
 	#sleep -> velocidade escolhida pelo usuario
->>>>>>> cc9a89f512a5d0742161ef96d28c1d06dd53f19c
 	lw	$a0, 0($sp)
 	li	$v0, 32
 	syscall 
@@ -443,11 +350,11 @@ yellow_off:
 	addiu	$sp, $sp, -48
 	sw	$ra, 16($sp)
 	
-	li	$a0, 24			# x0
-	li	$a2, 37			# x1
+	li	$a0, 24					# x0
+	li	$a2, 37					# x1
 	
-	li	$a1, 1			# y0
-	li	$a3, 1			# y1
+	li	$a1, 1					# y0
+	li	$a3, 1					# y1
 	
 	sw	$a0, 0($sp)
 	sw	$a2, 8($sp)
@@ -457,8 +364,8 @@ for_yellow:
 	lw	$a0, 0($sp)
 	lw	$a2, 8($sp)
 	jal	draw_line
-	addi	$a1, $a1, 1		# y0++
-	addi	$a3, $a3, 1		# y1++
+	addi	$a1, $a1, 1				# y0++
+	addi	$a3, $a3, 1				# y1++
 	b 	for_yellow	
 end_yellow:
 	lw	$ra, 16($sp)
@@ -469,11 +376,11 @@ red_off:
 	addiu	$sp, $sp, -48
 	sw	$ra, 16($sp)
 	
-	li	$a0, 24			# x0
-	li	$a2, 37			# x1
+	li	$a0, 24					# x0
+	li	$a2, 37					# x1
 	
-	li	$a1, 24			# y0
-	li	$a3, 24			# y1
+	li	$a1, 24					# y0
+	li	$a3, 24					# y1
 	
 	sw	$a0, 0($sp)
 	sw	$a2, 8($sp)
@@ -483,8 +390,8 @@ for_red:
 	lw	$a0, 0($sp)
 	lw	$a2, 8($sp)
 	jal	draw_line
-	addi	$a1, $a1, 1		# y0++
-	addi	$a3, $a3, 1		# y1++
+	addi	$a1, $a1, 1				# y0++
+	addi	$a3, $a3, 1				# y1++
 	b 	for_red	
 end_red:
 	lw	$ra, 16($sp)
@@ -495,11 +402,11 @@ green_off:
 	addiu	$sp, $sp, -48
 	sw	$ra, 16($sp)
 	
-	li	$a0, 14			# x0
-	li	$a2, 22			# x1
+	li	$a0, 14					# x0
+	li	$a2, 22					# x1
 	
-	li	$a1, 9			# y0
-	li	$a3, 9			# y1
+	li	$a1, 9					# y0
+	li	$a3, 9					# y1
 	
 	sw	$a0, 0($sp)
 	sw	$a2, 8($sp)
@@ -509,8 +416,8 @@ for_green:
 	lw	$a0, 0($sp)
 	lw	$a2, 8($sp)
 	jal	draw_line
-	addi	$a1, $a1, 1		# y0++
-	addi	$a3, $a3, 1		# y1++
+	addi	$a1, $a1, 1				# y0++
+	addi	$a3, $a3, 1				# y1++
 	b 	for_green	
 end_green:
 	lw	$ra, 16($sp)
@@ -521,11 +428,11 @@ blue_off:
 	addiu	$sp, $sp, -48
 	sw	$ra, 16($sp)
 	
-	li	$a0, 39			# x0
-	li	$a2, 47			# x1
+	li	$a0, 39					# x0
+	li	$a2, 47					# x1
 	
-	li	$a1, 9			# y0
-	li	$a3, 9			# y1
+	li	$a1, 9					# y0
+	li	$a3, 9					# y1
 	
 	sw	$a0, 0($sp)
 	sw	$a2, 8($sp)
@@ -535,8 +442,8 @@ for_blue:
 	lw	$a0, 0($sp)
 	lw	$a2, 8($sp)
 	jal	draw_line
-	addi	$a1, $a1, 1		# y0++
-	addi	$a3, $a3, 1		# y1++
+	addi	$a1, $a1, 1				# y0++
+	addi	$a3, $a3, 1				# y1++
 	b 	for_blue	
 end_blue:
 	lw	$ra, 16($sp)
@@ -548,11 +455,11 @@ yellow_on:
 	addiu	$sp, $sp, -48
 	sw	$ra, 16($sp)
 	
-	li	$a0, 24			# x0
-	li	$a2, 37			# x1
+	li	$a0, 24					# x0
+	li	$a2, 37					# x1
 	
-	li	$a1, 1			# y0
-	li	$a3, 1			# y1
+	li	$a1, 1					# y0
+	li	$a3, 1					# y1
 	
 	sw	$a0, 0($sp)
 	sw	$a2, 8($sp)
@@ -580,8 +487,8 @@ for_yellow_on:
 	lw	$a0, 0($sp)
 	lw	$a2, 8($sp)
 	jal	draw_line
-	addi	$a1, $a1, 1		# y0++
-	addi	$a3, $a3, 1		# y1++
+	addi	$a1, $a1, 1				# y0++
+	addi	$a3, $a3, 1				# y1++
 	b 	for_yellow_on	
 end_yellow_on:
 	lw	$ra, 16($sp)
@@ -592,11 +499,11 @@ red_on:
 	addiu	$sp, $sp, -48
 	sw	$ra, 16($sp)
 	
-	li	$a0, 24			# x0
-	li	$a2, 37			# x1
+	li	$a0, 24					# x0
+	li	$a2, 37					# x1
 	
-	li	$a1, 24			# y0
-	li	$a3, 24			# y1
+	li	$a1, 24					# y0
+	li	$a3, 24					# y1
 	
 	sw	$a0, 0($sp)
 	sw	$a2, 8($sp)
@@ -623,8 +530,8 @@ for_red_on:
 	lw	$a0, 0($sp)
 	lw	$a2, 8($sp)
 	jal	draw_line
-	addi	$a1, $a1, 1		# y0++
-	addi	$a3, $a3, 1		# y1++
+	addi	$a1, $a1, 1				# y0++
+	addi	$a3, $a3, 1				# y1++
 	b 	for_red_on	
 end_red_on:
 	lw	$ra, 16($sp)
@@ -635,11 +542,11 @@ green_on:
 	addiu	$sp, $sp, -48
 	sw	$ra, 16($sp)
 	
-	li	$a0, 14			# x0
-	li	$a2, 22			# x1
+	li	$a0, 14					# x0
+	li	$a2, 22					# x1
 	
-	li	$a1, 9			# y0
-	li	$a3, 9			# y1
+	li	$a1, 9					# y0
+	li	$a3, 9					# y1
 	
 	sw	$a0, 0($sp)
 	sw	$a2, 8($sp)
@@ -666,8 +573,8 @@ for_green_on:
 	lw	$a0, 0($sp)
 	lw	$a2, 8($sp)
 	jal	draw_line
-	addi	$a1, $a1, 1		# y0++
-	addi	$a3, $a3, 1		# y1++
+	addi	$a1, $a1, 1				# y0++
+	addi	$a3, $a3, 1				# y1++
 	b 	for_green_on	
 end_green_on:
 	lw	$ra, 16($sp)
@@ -678,11 +585,11 @@ blue_on:
 	addiu	$sp, $sp, -48
 	sw	$ra, 16($sp)
 	
-	li	$a0, 39			# x0
-	li	$a2, 47			# x1
+	li	$a0, 39					# x0
+	li	$a2, 47					# x1
 	
-	li	$a1, 9			# y0
-	li	$a3, 9			# y1
+	li	$a1, 9					# y0
+	li	$a3, 9					# y1
 	
 	sw	$a0, 0($sp)
 	sw	$a2, 8($sp)
@@ -711,8 +618,8 @@ for_blue_on:
 	lw	$a0, 0($sp)
 	lw	$a2, 8($sp)
 	jal	draw_line
-	addi	$a1, $a1, 1		# y0++
-	addi	$a3, $a3, 1		# y1++
+	addi	$a1, $a1, 1				# y0++
+	addi	$a3, $a3, 1				# y1++
 	b 	for_blue_on	
 end_blue_on:
 	lw	$ra, 16($sp)
@@ -781,11 +688,11 @@ set_pixel:
 	sw	$ra, 16($sp)
 	
 	la	$t0, 0x10010000
-	mul	$t2, $a1, 256		# y * 256
-	sll	$t1, $a0, 2		# x * 4
-	add	$t9, $t1, $t2		# (y * 256) + (x * 4)
-	add	$t9, $t9, $t0		# 0x10010000 +  (y * 256) + (x * 4)
-	sw	$s0, 0($t9)		# armazena a cor na pos (x, y)
+	mul	$t2, $a1, 256				# y * 256
+	sll	$t1, $a0, 2				# x * 4
+	add	$t9, $t1, $t2				# (y * 256) + (x * 4)
+	add	$t9, $t9, $t0				# 0x10010000 +  (y * 256) + (x * 4)
+	sw	$s0, 0($t9)				# armazena a cor na pos (x, y)
 	
 	lw	$ra, 16($sp)
 	addiu	$sp, $sp, 48
@@ -795,30 +702,30 @@ set_pixel:
 draw_line:
 	addiu	$sp, $sp, -48
 	sw	$ra, 16($sp)
-	sub	$s1, $a2, $a0		#dx = x1 - x0
+	sub	$s1, $a2, $a0				# dx = x1 - x0
 	sw	$s1, 24($sp)
-	sub	$s2, $a3, $a1		#dy = y1 - y0
+	sub	$s2, $a3, $a1				# dy = y1 - y0
 	sw	$s2, 28($sp)
-	sll	$s3, $s2, 1		#2 * dy 
-	sub	$s3, $s3, $s1		#D = 2*dy - dx
+	sll	$s3, $s2, 1				# 2 * dy 
+	sub	$s3, $s3, $s1				# D = 2*dy - dx
 	sw	$s3, 32($sp)
-	add	$s5, $a1, $zero		# y = y0
+	add	$s5, $a1, $zero				# y = y0
 	sw	$s5, 40($sp)
-	add 	$s4, $a0, $zero		# x = x0
+	add 	$s4, $a0, $zero				# x = x0
 	sw	$s4, 36($sp)
 for:
-	bgt	$s4, $a2, end_draw	# if x > x1
+	bgt	$s4, $a2, end_draw			# if x > x1
 	move	$a0, $s4
 	move	$a1, $s5
 	jal	set_pixel
 	lw	$s3, 32($sp)
-	blez	$s3, end_if		#D <= 0
+	blez	$s3, end_if				# D <= 0
 	lw	$s5, 40($sp)
 	lw	$s1, 24($sp)
 	lw	$s2, 28($sp)
-	addi	$s5, $s5, 1		# y = y + 1
-	sll	$t0, $s1, 1		# 2 * dx
-	sub	$s3, $s3, $t0		# D = D - 2 * dx	
+	addi	$s5, $s5, 1				# y = y + 1
+	sll	$t0, $s1, 1				# 2 * dx
+	sub	$s3, $s3, $t0				# D = D - 2 * dx	
 end_if:
 	lw	$s3, 32($sp)
 	lw	$s2, 28($sp)
@@ -831,13 +738,20 @@ end_draw:
 	lw	$ra, 16($sp)
 	addiu	$sp, $sp, 48
 	jr	$ra
-	
+
 get_result:	
-	lw	$t0, 0xffff0000
-	andi	$t0, $t0, 0x00000001			# Isolate ready bit
-	beqz	$t0, get_result				# se o ready é 0 ele espera para pegar um caracter
-	lbu	$v0, 0xffff0004   			# get data		
-	subi	$v0, $v0, 0x30
+	li      $t2, 0xffff0000     		# Receiver control register
+	li      $t3, 0x00000002     		# Interrupt enable bit
+	sw      $t3, ($t2)
+while:
+	lw 	$t0, flag
+	bnez	$t0, ler
+	b 	while
+ler:
+	li 	$t0, 0
+	sw 	$t0, flag
+	lbu	$v0, 0xffff0004   			# get data
+	subi	$v0, $v0, 0x30	
 	jr	$ra
 end:
 	lw	$ra, 16($sp)
@@ -845,3 +759,34 @@ end:
 exit_program:
 	li	$v0, 10
 	syscall
+
+#----------------------------------------------
+.kdata
+_regs: .space 12
+.ktext 0x80000180
+	move 	$k0, $at
+	la 	$k1, _regs
+	sw 	$k0, 0($k1)
+	sw 	$v0, 4($k1)
+	sw 	$a0, 8($k1)
+
+	lw      $t0, 0xffff0000
+	li      $t1, 0x0			# keyboard: Interrupt disable 
+
+	mfc0	$a0, $13		 	# get cause
+	li 	$t3, 0x00000100		# interrupt mask (8)
+	and 	$t1, $a0, $t3	
+	beq 	$t1, 0x0000100, if_interrupt_enable
+	j 	end_if_interrupt_enable
+if_interrupt_enable:
+	li 	$t2, 1
+	sw 	$t2, flag
+	li      $t2, 0xffff0000     	# Receiver control register
+	li      $t3, 0x00000002     	# Interrupt enable bit
+	sw      $t3, ($t2)
+
+end_if_interrupt_enable: 
+	lw 	$at, 0($k1)
+	lw 	$v0, 4($k1)
+	lw 	$a0, 8($k1)
+	eret
