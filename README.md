@@ -9,7 +9,8 @@ display height in pixels: 256
 unit width in pixels: 	8 
 unit height in pixels: 	8
 ```
-Após isso, conectar o Keyboard and Display MMIO Simulator do Mars. Quando ligar o jogo, aparecerá um menu onde irá solicitar ao usuário se ele deseja iniciar o jogo ou encerrar o programa. Caso o usuário digite 1, será solicitado a quantidade de repetições que ele quer jogar e em seguida, a velocidade (duração das ativações) em ms.  
+Após isso, conectar o Keyboard and Display MMIO Simulator do Mars. Quando ligar o jogo, aparecerá um menu onde irá solicitar ao usuário se ele deseja iniciar o jogo ou encerrar o programa. Caso o usuário digite 1, será solicitado a quantidade de repetições que ele quer jogar e em seguida, a velocidade (duração das ativações) em ms.
+Para jogar, o usuário deverá seguir as cores de acordo com a ordem de acionamento. Para representar cada cor, foram utilizados os numeros do teclado, sendo eles : 2, 4, 6 e 8, representando respectivamente as seguintes cores: vermelho, verde, azul e amarelo.
 
 ## contribuidores
 * **Heloiza Martins Schaberle**
